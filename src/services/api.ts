@@ -1,4 +1,16 @@
-import { ApiResponse, CategoryId, EMIPlan, MutualFundPortfolio, Product, SortOption } from '@/types';
+import {
+  ApiResponse,
+  BrandPartner,
+  CategoryId,
+  EMIPlan,
+  MutualFundPortfolio,
+  NearbyStore,
+  Order,
+  Product,
+  ProductVariant,
+  SearchSuggestion,
+  SortOption,
+} from '@/types';
 
 export interface FetchProductsParams {
   category?: CategoryId;
@@ -81,5 +93,106 @@ export const apiService = {
     }
 
     return json.data;
+  },
+
+  /**
+   * Place a new order with digital mutual fund pledge
+   */
+  async createOrder(payload: {
+    product: Product;
+    variant: ProductVariant;
+    emiPlan: EMIPlan;
+    schemeName?: string;
+  }): Promise<Order> {
+    const res = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const json: ApiResponse<Order> = await res.json();
+
+    if (!res.ok || !json.success) {
+      throw new Error(json.error || 'Failed to place 1Fi order');
+    }
+
+    return json.data;
+  },
+
+  /**
+   * Fetch active and past 1Fi orders
+   */
+  async getOrders(): Promise<Order[]> {
+    const res = await fetch('/api/orders', { cache: 'no-store' });
+    const json: ApiResponse<Order[]> = await res.json();
+
+    if (!res.ok || !json.success) {
+      throw new Error(json.error || 'Failed to fetch orders');
+    }
+
+    return json.data;
+  },
+
+  /**
+   * Fetch single order by ID
+   */
+  async getOrderById(id: string): Promise<Order> {
+    const res = await fetch(`/api/orders/${id}`, { cache: 'no-store' });
+    const json: ApiResponse<Order> = await res.json();
+
+    if (!res.ok || !json.success) {
+      throw new Error(json.error || `Failed to fetch order ${id}`);
+    }
+
+    return json.data;
+  },
+
+  /**
+   * Search suggestions autocomplete
+   */
+  async getSearchSuggestions(query: string): Promise<SearchSuggestion[]> {
+    if (!query.trim()) return [];
+    const res = await fetch(`/api/search/suggestions?q=${encodeURIComponent(query)}`, {
+      cache: 'no-store',
+    });
+    const json: ApiResponse<SearchSuggestion[]> = await res.json();
+
+    if (!res.ok || !json.success) {
+      return [];
+    }
+
+    return json.data;
+  },
+
+  /**
+   * Fetch official brand partners
+   */
+  async getBrands(): Promise<BrandPartner[]> {
+    const res = await fetch('/api/brands', { cache: 'no-store' });
+    const json: ApiResponse<BrandPartner[]> = await res.json();
+    return json.success ? json.data : [];
+  },
+
+  /**
+   * Fetch nearby partner stores with optional user geolocation & filters
+   */
+  async getNearbyStores(params: {
+    lat?: number;
+    lng?: number;
+    city?: string;
+    chain?: string;
+  } = {}): Promise<NearbyStore[]> {
+    const searchParams = new URLSearchParams();
+    if (params.lat !== undefined) searchParams.set('lat', params.lat.toString());
+    if (params.lng !== undefined) searchParams.set('lng', params.lng.toString());
+    if (params.city) searchParams.set('city', params.city);
+    if (params.chain) searchParams.set('chain', params.chain);
+
+    const queryString = searchParams.toString();
+    const url = `/api/nearby-stores${queryString ? `?${queryString}` : ''}`;
+
+    const res = await fetch(url, { cache: 'no-store' });
+    const json: ApiResponse<NearbyStore[]> = await res.json();
+    return json.success ? json.data : [];
   },
 };

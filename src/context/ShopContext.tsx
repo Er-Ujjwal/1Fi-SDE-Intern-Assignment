@@ -16,8 +16,8 @@ interface ShopContextType {
   setIsMobileFrame: (val: boolean) => void;
   quickViewProduct: Product | null;
   setQuickViewProduct: (product: Product | null) => void;
-  confirmedOrder: OrderConfirmationData | null;
-  setConfirmedOrder: (order: OrderConfirmationData | null) => void;
+  isEmisModalOpen: boolean;
+  setIsEmisModalOpen: (open: boolean) => void;
 }
 
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
@@ -29,7 +29,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [isMobileFrame, setIsMobileFrame] = useState<boolean>(true);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
-  const [confirmedOrder, setConfirmedOrder] = useState<OrderConfirmationData | null>(null);
+  const [isEmisModalOpen, setIsEmisModalOpen] = useState<boolean>(false);
 
   return (
     <ShopContext.Provider
@@ -46,8 +46,8 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         setIsMobileFrame,
         quickViewProduct,
         setQuickViewProduct,
-        confirmedOrder,
-        setConfirmedOrder,
+        isEmisModalOpen,
+        setIsEmisModalOpen,
       }}
     >
       {children}

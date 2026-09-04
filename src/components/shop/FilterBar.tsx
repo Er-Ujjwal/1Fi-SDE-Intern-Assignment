@@ -1,8 +1,22 @@
 'use client';
 
-import React from 'react';
-import { CategoryId, SortOption } from '@/types';
-import { Search, SlidersHorizontal, X, Smartphone, Laptop, Headphones, Tablet, Watch, LayoutGrid } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
+import { CategoryId, SearchSuggestion, SortOption } from '@/types';
+import { useSearchSuggestions } from '@/hooks/useSearchSuggestions';
+import {
+  Search,
+  SlidersHorizontal,
+  X,
+  Smartphone,
+  Laptop,
+  Headphones,
+  Tablet,
+  Watch,
+  LayoutGrid,
+  ChevronRight,
+  Sparkles,
+} from 'lucide-react';
 
 interface FilterBarProps {
   selectedCategory: CategoryId;
@@ -12,6 +26,7 @@ interface FilterBarProps {
   sortBy: SortOption;
   onSortChange: (sort: SortOption) => void;
   onSimulateError?: () => void;
+  onSelectSuggestion?: (suggestion: SearchSuggestion) => void;
 }
 
 export function FilterBar({
@@ -22,9 +37,14 @@ export function FilterBar({
   sortBy,
   onSortChange,
   onSimulateError,
+  onSelectSuggestion,
 }: FilterBarProps) {
+  const [isFocused, setIsFocused] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const { suggestions, isLoading: isSuggestionsLoading } = useSearchSuggestions(searchQuery);
+
   const categories: { id: CategoryId; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-    { id: 'all', label: 'All', icon: LayoutGrid },
+    { id: 'all', label: 'All Devices', icon: LayoutGrid },
     { id: 'smartphones', label: 'Phones', icon: Smartphone },
     { id: 'laptops', label: 'Laptops', icon: Laptop },
     { id: 'audio', label: 'Audio', icon: Headphones },
@@ -32,26 +52,111 @@ export function FilterBar({
     { id: 'wearables', label: 'Watches', icon: Watch },
   ];
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setIsFocused(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSuggestionClick = (suggestion: SearchSuggestion) => {
+    onSearchChange(suggestion.title.replace(' Official Store', ''));
+    if (suggestion.category) {
+      onSelectCategory(suggestion.category);
+    }
+    setIsFocused(false);
+    if (onSelectSuggestion) {
+      onSelectSuggestion(suggestion);
+    }
+  };
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 relative">
       {/* Search Input & Controls */}
       <div className="flex items-center gap-2">
-        <div className="relative flex-1">
+        <div ref={searchContainerRef} className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search iPhone, MacBook, Sony..."
+            placeholder="Search iPhone, MacBook, Sony, Galaxy..."
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={(e) => {
+              onSearchChange(e.target.value);
+              setIsFocused(true);
+            }}
+            onFocus={() => setIsFocused(true)}
             className="w-full pl-10 pr-9 py-2.5 rounded-2xl bg-white border border-slate-200 text-sm placeholder:text-slate-400 text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all shadow-2xs"
           />
           {searchQuery && (
             <button
-              onClick={() => onSearchChange('')}
+              onClick={() => {
+                onSearchChange('');
+                setIsFocused(false);
+              }}
               className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
+          )}
+
+          {/* Real-time Autocomplete Suggestions Dropdown */}
+          {isFocused && searchQuery.trim().length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-2xl border border-slate-200 shadow-xl z-30 overflow-hidden divide-y divide-slate-100 animate-in fade-in duration-150">
+              {isSuggestionsLoading ? (
+                <div className="p-3 text-xs text-slate-400 text-center animate-pulse">
+                  Searching 1Fi catalog...
+                </div>
+              ) : suggestions.length > 0 ? (
+                <div>
+                  <div className="px-3 py-1.5 bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Instant Matches
+                  </div>
+                  {suggestions.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => handleSuggestionClick(item)}
+                      className="p-2.5 flex items-center justify-between hover:bg-brand-50/60 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {item.image ? (
+                          <div className="relative w-8 h-8 rounded-lg bg-slate-50 p-0.5 border border-slate-100 shrink-0">
+                            <Image
+                              src={item.image}
+                              alt={item.title}
+                              fill
+                              className="object-contain p-0.5"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center text-xs font-bold shrink-0">
+                            <Sparkles className="w-4 h-4" />
+                          </div>
+                        )}
+                        <div className="truncate">
+                          <span className="text-xs font-bold text-slate-900 block truncate">
+                            {item.title}
+                          </span>
+                          {item.price && (
+                            <span className="text-[11px] text-brand-700 font-semibold">
+                              ₹{item.price.toLocaleString('en-IN')} (0% EMI)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-3 text-xs text-slate-500 text-center">
+                  No matching gadgets found.
+                </div>
+              )}
+            </div>
           )}
         </div>
 

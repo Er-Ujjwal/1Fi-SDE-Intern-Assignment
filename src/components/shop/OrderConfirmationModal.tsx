@@ -2,20 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { EMIPlan, MutualFundPortfolio, Product, ProductVariant } from '@/types';
+import { EMIPlan, Order, Product, ProductVariant } from '@/types';
 import { usePortfolio } from '@/hooks/usePortfolio';
+import { apiService } from '@/services/api';
 import {
   CheckCircle,
   ShieldCheck,
   X,
-  Sparkles,
   ArrowRight,
   CreditCard,
   Building,
-  Calendar,
   Lock,
-  Receipt,
   FileCheck2,
+  AlertCircle,
 } from 'lucide-react';
 
 interface OrderConfirmationModalProps {
@@ -24,7 +23,7 @@ interface OrderConfirmationModalProps {
   product: Product;
   selectedVariant: ProductVariant;
   selectedPlan: EMIPlan;
-  onSuccess: () => void;
+  onSuccess?: (createdOrder: Order) => void;
 }
 
 export function OrderConfirmationModal({
@@ -38,20 +37,22 @@ export function OrderConfirmationModal({
   const { portfolio } = usePortfolio();
   const [step, setStep] = useState<'review' | 'success'>('review');
   const [isAuthorizing, setIsAuthorizing] = useState(false);
-  const [selectedSchemeIndex, setSelectedSchemeIndex] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       setStep('review');
       setIsAuthorizing(false);
+      setErrorMessage(null);
+      setCreatedOrder(null);
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const orderId = `1FI-${Math.floor(100000 + Math.random() * 900000)}`;
   const eligibleSchemes = portfolio?.eligibleSchemes || [];
-  const selectedScheme = eligibleSchemes[selectedSchemeIndex] || {
+  const selectedScheme = eligibleSchemes[0] || {
     name: 'Parag Parikh Flexi Cap Fund - Direct (Growth)',
     amc: 'PPFAS Mutual Fund',
     currentValue: 185000,
@@ -75,11 +76,22 @@ export function OrderConfirmationModal({
     maximumFractionDigits: 0,
   }).format(selectedPlan.mfCollateralRequired);
 
-  const handleConfirmPledge = () => {
+  const handleConfirmPledge = async () => {
     setIsAuthorizing(true);
-    setTimeout(() => {
-      setIsAuthorizing(false);
+    setErrorMessage(null);
+
+    try {
+      // Real backend POST /api/orders request
+      const order = await apiService.createOrder({
+        product,
+        variant: selectedVariant,
+        emiPlan: selectedPlan,
+        schemeName: selectedScheme.name,
+      });
+
+      setCreatedOrder(order);
       setStep('success');
+
       try {
         confetti({
           particleCount: 80,
@@ -88,14 +100,21 @@ export function OrderConfirmationModal({
           colors: ['#712CDC', '#10B981', '#F59E0B', '#3B82F6'],
         });
       } catch {
-        // Fallback if canvas-confetti is not available
+        // fallback
       }
-      onSuccess();
-    }, 1200);
+
+      if (onSuccess) {
+        onSuccess(order);
+      }
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to place 1Fi order');
+    } finally {
+      setIsAuthorizing(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-slate-100 shadow-2xl relative flex flex-col">
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
@@ -117,7 +136,15 @@ export function OrderConfirmationModal({
         </div>
 
         {step === 'review' ? (
-          <div className="p-5 space-y-5">
+          <div className="p-4 sm:p-5 space-y-4">
+            {/* Error callout if any */}
+            {errorMessage && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
             {/* Product & Variant Mini Card */}
             <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/70">
               <div className="w-14 h-14 bg-white rounded-xl p-1.5 border border-slate-200 shrink-0 flex items-center justify-center">
@@ -200,7 +227,7 @@ export function OrderConfirmationModal({
                 </div>
                 <div className="flex justify-between items-center text-slate-700">
                   <span>1st EMI Due Date</span>
-                  <span className="font-bold text-slate-900">05th October 2026</span>
+                  <span className="font-bold text-slate-900">05th of next month</span>
                 </div>
                 <div className="flex justify-between items-center text-slate-700">
                   <span>Linked Mandate Bank</span>
@@ -236,7 +263,7 @@ export function OrderConfirmationModal({
               {isAuthorizing ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Authorizing Digital Pledge via OTP...</span>
+                  <span>Connecting to CAMS & Authorizing Lien...</span>
                 </>
               ) : (
                 <>
@@ -249,7 +276,7 @@ export function OrderConfirmationModal({
           </div>
         ) : (
           /* Step 2: Order Confirmed Success State */
-          <div className="p-6 text-center space-y-5">
+          <div className="p-5 sm:p-6 text-center space-y-4">
             <div className="w-16 h-16 rounded-3xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
               <CheckCircle className="w-9 h-9" />
             </div>
@@ -262,7 +289,7 @@ export function OrderConfirmationModal({
                 Welcome to 0% Interest Shopping
               </h3>
               <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
-                Your order has been authorized with zero down payment. Your mutual funds are securely pledged and will continue compounding!
+                Your order has been recorded in the backend. Your mutual funds are securely pledged and will continue compounding!
               </p>
             </div>
 
@@ -270,7 +297,9 @@ export function OrderConfirmationModal({
             <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 text-left space-y-2 text-xs">
               <div className="flex justify-between items-center text-slate-500">
                 <span>Order Reference</span>
-                <span className="font-mono font-bold text-slate-900">{orderId}</span>
+                <span className="font-mono font-bold text-slate-900">
+                  {createdOrder?.orderNumber || '1FI-SUCCESS'}
+                </span>
               </div>
               <div className="flex justify-between items-center text-slate-500">
                 <span>Monthly Auto-Debit</span>
@@ -285,8 +314,8 @@ export function OrderConfirmationModal({
                 <span className="font-semibold text-slate-800">{selectedScheme.name.split('-')[0]}</span>
               </div>
               <div className="flex justify-between items-center text-slate-500">
-                <span>Estimated Delivery</span>
-                <span className="font-bold text-slate-800">In 2-3 Business Days</span>
+                <span>Lien Reference</span>
+                <span className="font-mono text-slate-700">{createdOrder?.pledgedScheme.lienReferenceId || 'LIEN-ACTIVE'}</span>
               </div>
             </div>
 

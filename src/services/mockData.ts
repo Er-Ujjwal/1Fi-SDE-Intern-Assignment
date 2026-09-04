@@ -6,6 +6,7 @@ export const MOCK_USER_PORTFOLIO: MutualFundPortfolio = {
   currentPledgedValue: 35000,
   eligibleSchemes: [
     {
+      id: 'scheme-ppfas',
       name: 'Parag Parikh Flexi Cap Fund - Direct (Growth)',
       amc: 'PPFAS Mutual Fund',
       category: 'Equity: Flexi Cap',
@@ -15,6 +16,7 @@ export const MOCK_USER_PORTFOLIO: MutualFundPortfolio = {
       growthPercentage: 22.4,
     },
     {
+      id: 'scheme-mirae',
       name: 'Mirae Asset Large Cap Fund - Direct (Growth)',
       amc: 'Mirae Asset Mutual Fund',
       category: 'Equity: Large Cap',
@@ -24,6 +26,7 @@ export const MOCK_USER_PORTFOLIO: MutualFundPortfolio = {
       growthPercentage: 16.8,
     },
     {
+      id: 'scheme-icici',
       name: 'ICICI Prudential Bluechip Fund - Direct (Growth)',
       amc: 'ICICI Prudential AMC',
       category: 'Equity: Large Cap',

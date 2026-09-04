@@ -59,19 +59,96 @@ export interface EMIPlan {
   tag?: string;
 }
 
+export interface MutualFundScheme {
+  id: string;
+  name: string;
+  amc: string;
+  category: string;
+  currentValue: number;
+  availableUnits: number;
+  nav: number;
+  growthPercentage: number;
+  isPledged?: boolean;
+}
+
 export interface MutualFundPortfolio {
   totalPortfolioValue: number;
   availableCreditLimit: number;
   currentPledgedValue: number;
-  eligibleSchemes: {
-    name: string;
+  eligibleSchemes: MutualFundScheme[];
+}
+
+export interface EMIScheduleItem {
+  installmentNumber: number;
+  dueDate: string;
+  amount: number;
+  status: 'PAID' | 'UPCOMING' | 'DUE';
+  paymentMode: string;
+}
+
+export interface Order {
+  id: string;
+  orderNumber: string;
+  productId: string;
+  productName: string;
+  productBrand: string;
+  productImage: string;
+  variant: ProductVariant;
+  emiPlan: EMIPlan;
+  totalPrice: number;
+  monthlyEmi: number;
+  tenureMonths: number;
+  pledgedScheme: {
+    schemeName: string;
     amc: string;
-    category: string;
-    currentValue: number;
-    availableUnits: number;
-    nav: number;
-    growthPercentage: number;
-  }[];
+    pledgedValue: number;
+    lienReferenceId: string;
+  };
+  mandateBank: {
+    bankName: string;
+    accountMask: string;
+    mandateId: string;
+  };
+  status: 'ACTIVE_EMI' | 'COMPLETED' | 'PROCESSING';
+  orderDate: string;
+  estimatedDeliveryDate: string;
+  schedule: EMIScheduleItem[];
+}
+
+export interface SearchSuggestion {
+  id: string;
+  title: string;
+  type: 'product' | 'brand' | 'category';
+  category?: CategoryId;
+  price?: number;
+  image?: string;
+}
+
+export interface BrandPartner {
+  id: string;
+  name: string;
+  category: string;
+  itemCount: number;
+  logo: string;
+  status: 'Active Partner' | 'Integration Coming Soon';
+  discountBanner?: string;
+}
+
+export interface NearbyStore {
+  id: string;
+  name: string;
+  chain: string;
+  address: string;
+  city: string;
+  latitude: number;
+  longitude: number;
+  distanceKm: number;
+  pincode: string;
+  supports1FiQR: boolean;
+  phone: string;
+  timings: string;
+  popularDeals: string[];
+  image: string;
 }
 
 export interface OrderConfirmationData {
@@ -91,4 +168,10 @@ export interface ApiResponse<T> {
   message?: string;
   error?: string;
   timestamp: string;
+  meta?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+    totalPages?: number;
+  };
 }

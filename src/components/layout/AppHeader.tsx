@@ -3,7 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePortfolio } from '@/hooks/usePortfolio';
-import { ShieldCheck, Sparkles } from 'lucide-react';
+import { useShop } from '@/context/ShopContext';
+import { ShieldCheck, Sparkles, ReceiptText } from 'lucide-react';
 
 interface AppHeaderProps {
   showSearch?: boolean;
@@ -11,6 +12,7 @@ interface AppHeaderProps {
 
 export function AppHeader({ showSearch = false }: AppHeaderProps) {
   const { portfolio } = usePortfolio();
+  const { setIsEmisModalOpen } = useShop();
 
   const creditLimit = portfolio
     ? `₹${(portfolio.availableCreditLimit / 100000).toFixed(2)}L`
@@ -34,9 +36,13 @@ export function AppHeader({ showSearch = false }: AppHeaderProps) {
           </div>
         </Link>
 
-        {/* 1Fi LAMF Credit Limit Badge */}
+        {/* 1Fi LAMF Credit Limit Badge & EMI Tracker Button */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200/80 text-brand-800 text-xs font-semibold shadow-2xs">
+          <button
+            onClick={() => setIsEmisModalOpen(true)}
+            title="View Active 0% EMIs & Mutual Fund Lien Status"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 hover:bg-brand-100/80 border border-brand-200/80 text-brand-800 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+          >
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -44,12 +50,15 @@ export function AppHeader({ showSearch = false }: AppHeaderProps) {
             <span className="hidden xs:inline text-slate-500 font-medium">Limit:</span>
             <span className="font-bold text-brand-900">{creditLimit}</span>
             <ShieldCheck className="w-3.5 h-3.5 text-brand-600 ml-0.5" />
-          </div>
+          </button>
 
-          <div className="hidden sm:flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-full">
-            <Sparkles className="w-3 h-3 text-emerald-600" />
-            0% Interest
-          </div>
+          <button
+            onClick={() => setIsEmisModalOpen(true)}
+            className="flex items-center gap-1 text-[11px] font-semibold text-slate-700 hover:text-brand-700 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-full transition-colors cursor-pointer"
+          >
+            <ReceiptText className="w-3.5 h-3.5 text-slate-600" />
+            <span className="hidden xs:inline">My EMIs</span>
+          </button>
         </div>
       </div>
     </header>
