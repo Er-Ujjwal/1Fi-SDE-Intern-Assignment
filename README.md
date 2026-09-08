@@ -94,27 +94,6 @@ npm run start
 
 ---
 
-## 💳 1Fi LAMF (Loan-Against-Mutual-Funds) Financial Model
-
-### Core Value Proposition
-1. **Never Break Compounding Growth:** Instead of selling mutual fund units (triggering capital gains tax and stopping portfolio compounding), the user places a temporary digital lien on mutual fund units via CAMS/KFintech.
-2. **0% Interest & ₹0 Fees:** Unlike credit cards that charge 16%–24% p.a. + processing fees, 1Fi provides true 0% interest EMIs with **₹0 upfront down payment** and **₹0 processing fee**.
-3. **Collateral Calculation:** `MF Collateral Hold = Product Price × 1.5` (standard 67% LTV ratio for equity mutual funds).
-4. **Auto-Debit & Lien Release:** Monthly installments are debited via e-NACH / UPI Autopay. Once all EMIs are paid, the lien is automatically released.
-
-### Comparison Table: 1Fi 0% EMI vs Standard Credit Card EMI
-
-| Parameter | Credit Card EMI (16% p.a.) | 1Fi 0% EMI (Backed by MFs) |
-|---|---|---|
-| **Down Payment** | ₹0 | **₹0** |
-| **Interest Rate** | 16.00% p.a. | **0.00% (No-Cost)** |
-| **Processing Fees** | ₹199 – ₹999 + GST | **₹0** |
-| **Monthly EMI (iPhone ₹1,34,900 / 24m)** | ₹6,608 / mo | **₹5,621 / mo** |
-| **Total Amount Paid** | ₹1,58,592 | **₹1,34,900** |
-| **User Savings with 1Fi** | ₹0 (Loss of ₹23,692) | **Saves ₹23,692** 🎉 |
-
----
-
 ## 📂 Project Architecture & Directory Structure
 
 ```
