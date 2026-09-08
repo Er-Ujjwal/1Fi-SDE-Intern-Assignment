@@ -216,8 +216,3 @@ npm run build
 ```
 
 ---
-
-## 👨‍💻 Author & Assignment Notes
-- **Assignment:** 1Fi SDE Intern Take-Home Assignment
-- **Focus:** 1Fi Marketplace within the existing Shop experience
-- **Designed for:** Seamless evaluation on mobile devices (via Expo Go) and web browsers (via Next.js).
